@@ -1,15 +1,25 @@
 <script language="Javascript" src="lib/jquery.min.js"></script>
+<link rel="stylesheet" href="lib/highlight/styles/default.css">
+<script src="lib/highlight/highlight.pack.js"></script>
+
 <script type="text/javascript" defer="defer">
 
 function scrubHTML(html) {
   // unescape HTML entities
-  html = html.replace(/&amp;/ig, '&');
-  html = html.replace(/&lt;/ig, '<');
-  html = html.replace(/&gt;/ig, '>');
+  //html = html.replace(/&amp;/ig, '&');
+  //html = html.replace(/&lt;/ig, '<');
+  //html = html.replace(/&gt;/ig, '>');
   // undo Adium's terrible auto-linking
-  html = html.replace(/"<a href="https?:\/\/.+?" title="https?:\/\/.+?">(https?:\/\/.+?)<\/a>"/g, '"$1"');
+  html = html.replace(/"<a href="https?:\/\/.+?" title="https?:\/\/.+?">(https?:\/\/.+?)<\/a>/g, '"$1"');
   // strip targets
   html = html.replace(/target="_blank"/g, '');
+  return html
+}
+
+function unformatHTML(html) {
+  // remove HTML formatting
+  html = html.replace(/<br>/ig, '\n');
+  html = html.replace(/&nbsp;/ig, ' ');
   return html
 }
 
@@ -17,13 +27,26 @@ function hipChatizeHTML(html) {
 
   var messageNode = html.querySelector('#contents');
   var rawMessage = messageNode.innerHTML;
+  var senderNode = html.querySelector('#sender');
 
   // scrub the raw message
-  rawMessage = scrubHTML(rawMessage);
-  // add style to @ mentions
-  messageNode.innerHTML = rawMessage.replace(/(@"*[\d\w]*)/, '<span class="atTag">$1</span>');
+  // rawMessage = scrubHTML(rawMessage);
 
-  var senderNode = html.querySelector('#sender');
+  // Look for /<keyword> commands, else do general message formatting  
+  if(rawMessage.match(/^\s*\/code\s+/)) {
+     // format /code
+     rawMessage = rawMessage.replace(/^\s*\/code\s+(.*)/, '<pre><code>$1</pre></code>');
+     messageNode.innerHTML = unformatHTML(rawMessage);
+     hljs.highlightBlock(messageNode);
+  } else if(rawMessage.match(/^\s*\/quote\s+/)) {
+     // format /quote
+     messageNode.innerHTML = rawMessage.replace(/^\s*\/quote\s+(.*)/, '<span class="monospace">$1</span>');
+  } else {
+     // add style to @ mentions - but not emails
+     messageNode.innerHTML = rawMessage.replace(/(^|\s+)(@"*[\d\w]*)/g, '$1<span class="atTag">$2</span>');
+  }
+  
+
 
   // if we have a sender assume we are a 'real' first message
   if(senderNode != null) {
@@ -53,6 +76,14 @@ function hipChatizeHTML(html) {
       }
     } else {
       messageClass = "";
+    }
+    
+    if(/jira/gi.test(rawSender)) {
+      rawMessage = messageNode.innerHTML;
+      messageNode.innerHTML = rawMessage.replace(/^<a.*>(.*)<\/a>(.*<a.*<a.*)<a.*>(.*)<\/a>(.*)<a.*>(.*)<\/a>(.*)$/, '<img src="$1">$2<img src="$3">$4<img src="$5">$6');
+    } else if(/confluence/gi.test(rawSender)) {
+      rawMessage = messageNode.innerHTML;
+      messageNode.innerHTML = rawMessage.replace(/page-default/, '<span class="icon">&#xF183;</span>');
     }
 
     $(html.firstChild).addClass(messageClass);

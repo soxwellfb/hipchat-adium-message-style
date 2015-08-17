@@ -127,7 +127,7 @@ border-left:1px solid #BED6EB;
 .messageBlock
 pre {
 white-space:pre-wrap;
-font-family:monospace;
+font-family:courier,monospace;
 tab-interval:10px;
 margin:0 10px;
 }
@@ -135,7 +135,7 @@ margin:0 10px;
 .messageBlock
 code {
 white-space:pre-wrap;
-font-family:monospace;
+font-family:courier,monospace;
 }
 
 .nameBlock {
@@ -321,6 +321,17 @@ margin:0;
 padding:0 3px;
 }
 
+.codeTag {
+display:inline-block;
+border:1px solid #B4B4B4;
+background-color:#EFEFEF;
+-webkit-border-radius:4px;
+-moz-border-radius:4px;
+margin:0;
+padding:0 3px;
+font-family:monospace;
+}
+
 .atTagMe {
 color:#fff;
 border:1px solid #4783BF;
@@ -398,7 +409,11 @@ color:#888;
 p.monospace, .messageBlock p.monospace
 *, .messageBlock pre
 * {
-font-family:monospace;
+font-family:courier,monospace;
+}
+
+.messageBlock .monospace {
+font-family:courier,monospace;
 }
 
 /* MESSAGE STYLE COMPAT */
@@ -448,4 +463,13 @@ border:none;
 
 .systemMessage.purple p {
   color: #777;
+}
+
+@font-face {
+    font-family: "atlassian-icons";
+    src: url("lib/atlassian-icons.woff") format('woff');
+}
+
+.icon {
+   font-family: "atlassian-icons";   
 }
