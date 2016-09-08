@@ -6,11 +6,11 @@
 
 function scrubHTML(html) {
   // unescape HTML entities
-  //html = html.replace(/&amp;/ig, '&');
-  //html = html.replace(/&lt;/ig, '<');
-  //html = html.replace(/&gt;/ig, '>');
-  // undo Adium's terrible auto-linking
-  html = html.replace(/"<a href="https?:\/\/.+?" title="https?:\/\/.+?">(https?:\/\/.+?)<\/a>/g, '"$1"');
+  html = html.replace(/&amp;/ig, '&');
+  html = html.replace(/&lt;/ig, '<');
+  html = html.replace(/&gt;/ig, '>');
+  //// undo Adium's terrible auto-linking
+  // html = html.replace(/"<a href="https?:\/\/.+?" title="https?:\/\/.+?">(https?:\/\/.+?)<\/a>/g, '"$1"');
   // strip targets
   html = html.replace(/target="_blank"/g, '');
   return html
@@ -30,7 +30,7 @@ function hipChatizeHTML(html) {
   var senderNode = html.querySelector('#sender');
 
   // scrub the raw message
-  // rawMessage = scrubHTML(rawMessage);
+  rawMessage = scrubHTML(rawMessage);
 
   // Look for /<keyword> commands, else do general message formatting  
   if(rawMessage.match(/^\s*\/code\s+/)) {
@@ -41,6 +41,13 @@ function hipChatizeHTML(html) {
   } else if(rawMessage.match(/^\s*\/quote\s+/)) {
      // format /quote
      messageNode.innerHTML = rawMessage.replace(/^\s*\/quote\s+(.*)/, '<span class="monospace">$1</span>');
+  } else if (rawMessage.match(/^page-default.*<b><a.*<\/a><\/b>.*page (created|updated) by/)) { // <a.*<\/a><\/b>\s+page\s+(created|updated)\s+by
+     // confluence page creation
+     // replace page-default with page icon
+     // TODO: make icon blue, background grey - main.css needs major work
+     messageNode.innerHTML = rawMessage.replace(/^page-default/, '<span class="icon">&#xF183;</span>');
+  } else if (rawMessage.match(/^page-blogpost.*<b><a.*<\/a><\/b>.*blog post (created|updated) by/)) {
+     messageNode.innerHTML = rawMessage.replace(/^page-blogpost/, '<span class="icon">&#xF182;</span>');
   } else {
      // add style to @ mentions - but not emails
      messageNode.innerHTML = rawMessage.replace(/(^|\s+)(@"*[\d\w]*)/g, '$1<span class="atTag">$2</span>');
@@ -83,18 +90,14 @@ function hipChatizeHTML(html) {
       messageNode.innerHTML = rawMessage.replace(/^<a.*>(.*)<\/a>(.*<a.*<a.*)<a.*>(.*)<\/a>(.*)<a.*>(.*)<\/a>(.*)$/, '<img src="$1">$2<img src="$3">$4<img src="$5">$6');
     } else if(/confluence/gi.test(rawSender)) {
       rawMessage = messageNode.innerHTML;
-      if (rawMessage.match(/^page-default/)) {
-         // replace page-default with page icon
-         // TODO: make icon blue, background grey - main.css needs major work
-         messageNode.innerHTML = rawMessage.replace(/^page-default/, '<span class="icon">&#xF183;</span>');
-         messageClass = "systemMessage";
-      } else if (rawMessage.match(/^approve/)) {
+      messageClass = "systemMessage";
+      if (rawMessage.match(/^approve/)) {
          // replace 'approve' with tick         
          // TODO: make tick and link green
          messageNode.innerHTML = rawMessage.replace(/^approve/, '<span class="icon">&#xF104;</span>');
          messageClass = "systemMessage green";
       }
-    }
+    } 
 
     $(html.firstChild).addClass(messageClass);
   }
